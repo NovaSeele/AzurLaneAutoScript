@@ -360,9 +360,11 @@ class CampaignRun(CampaignEvent):
         Pages:
             in: page_campaign
         """
+        if not self.config.is_task_enabled('Commission'):
+            return
         if self.campaign.commission_notice_show_at_campaign():
             logger.info('Commission notice found')
-            self.config.task_call('Commission', force_call=True)
+            self.config.task_call('Commission', force_call=False)
             self.config.task_stop('Commission notice found')
 
     def run(self, name, folder='campaign_main', mode='normal', total=0):

@@ -91,6 +91,9 @@ class GitManager(DeployConfig):
             logger.info('AutoUpdate is disabled, skip')
             return
 
+        logger.info('Custom modifications active, skip git update to preserve changes')
+        return
+
         if self.GitOverCdn:
             if self.goc_client.update():
                 return

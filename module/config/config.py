@@ -295,20 +295,8 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
                 if isinstance(next_run, datetime) and next_run > limit:
                     deep_set(self.data, keys=f"{task}.Scheduler.NextRun", value=now)
 
-        for task in ["Commission", "Research", "Reward"]:
-            if not self.is_task_enabled(task):
-                self.modified[f"{task}.Scheduler.Enable"] = True
-        force_enable = list
-
-        force_enable(
-            [
-                "Commission",
-                "Research",
-                "Reward",
-            ]
-        )
-        limit_next_run(["Commission", "Reward"], limit=now + timedelta(hours=12, seconds=-1))
-        limit_next_run(["Research"], limit=now + timedelta(hours=24, seconds=-1))
+        limit_next_run([t for t in ["Commission", "Reward"] if self.is_task_enabled(t)], limit=now + timedelta(hours=12, seconds=-1))
+        limit_next_run([t for t in ["Research"] if self.is_task_enabled(t)], limit=now + timedelta(hours=24, seconds=-1))
         limit_next_run(["OpsiExplore", "OpsiCrossMonth", "OpsiVoucher", "OpsiMonthBoss", "OpsiShop"],
                        limit=now + timedelta(days=31, seconds=-1))
         limit_next_run(["OpsiArchive"], limit=now + timedelta(days=7, seconds=-1))
@@ -553,7 +541,7 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
 
         self.update()
 
-    def task_call(self, task, force_call=True):
+    def task_call(self, task, force_call=False):
         """
         Call another task to run.
 
@@ -577,7 +565,8 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
             self.modified[f"{task}.Scheduler.NextRun"] = datetime.now().replace(
                 microsecond=0
             )
-            self.modified[f"{task}.Scheduler.Enable"] = True
+            if force_call:
+                self.modified[f"{task}.Scheduler.Enable"] = True
             if self.auto_update:
                 self.update()
             return True
