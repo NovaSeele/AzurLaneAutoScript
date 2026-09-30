@@ -528,3 +528,20 @@ pre.rich-traceback-code {
     height: 1.5rem;
     border: .2em solid currentColor;
 }
+
+.aside-icon.running > path,
+.aside-icon > path.running,
+svg.running path {
+    fill: #28a745 !important;
+}
+
+.aside-icon.running,
+svg.running {
+    filter: drop-shadow(0 0 4px #28a745) !important;
+}
+
+.btn-aside.running,
+.btn-aside-running {
+    color: #28a745 !important;
+    font-weight: bold !important;
+}

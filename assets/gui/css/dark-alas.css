@@ -95,6 +95,23 @@ textarea {
     fill: #c9d1d9;
 }
 
+.aside-icon.running > path,
+.aside-icon > path.running,
+svg.running path {
+    fill: #28a745 !important;
+}
+
+.aside-icon.running,
+svg.running {
+    filter: drop-shadow(0 0 4px #28a745) !important;
+}
+
+.btn-aside.running,
+.btn-aside-running {
+    color: #28a745 !important;
+    font-weight: bold !important;
+}
+
 .container-log {
     background-color: #2f3136 !important;
     border: 1px solid #21262d;

@@ -2114,5 +2114,8 @@
     "Storage": {
       "Storage": {}
     }
+  },
+  "Optimization": {
+    "WhenTaskQueueEmpty": "stop"
   }
 }

@@ -213,11 +213,12 @@
       },
       "WhenTaskQueueEmpty": {
         "type": "select",
-        "value": "goto_main",
+        "value": "stop",
         "option": [
           "stay_there",
           "goto_main",
-          "close_game"
+          "close_game",
+          "stop"
         ]
       }
     },

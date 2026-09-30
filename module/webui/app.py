@@ -162,12 +162,19 @@ class AlasGUI(Frame):
                 rendered_state = ProcessManager.get_manager(name).state
                 icon_html = Icon.RUN
                 if rendered_state == 1:
-                    icon_html = icon_html.replace('<path ', '<path fill="#28a745" ')
+                    icon_html = (
+                        icon_html.replace('class="aside-icon icon-run"', 'class="aside-icon icon-run running"')
+                        .replace('<path ', '<path class="running" style="fill: #28a745 !important;" ')
+                    )
                     if self.af_flag:
                         icon_html = icon_html[:31] + ' anim-rotate' + icon_html[31:]
+                    btn_color = "aside running"
+                else:
+                    btn_color = "aside"
+
                 put_icon_buttons(
                     icon_html,
-                    buttons=[{"label": name, "value": name, "color": "aside"}],
+                    buttons=[{"label": name, "value": name, "color": btn_color}],
                     onclick=self.ui_alas,
                 )
             return rendered_state

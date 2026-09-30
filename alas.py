@@ -507,7 +507,16 @@ class AzurLaneAutoScript:
                 logger.info(f'Wait until {task.next_run} for task `{task.command}`')
                 self.is_first_task = False
                 method = self.config.Optimization_WhenTaskQueueEmpty
-                if method == 'close_game':
+                if method == 'stop':
+                    logger.info('No task pending and Optimization_WhenTaskQueueEmpty is "stop". Alas finish.')
+                    try:
+                        self.run('goto_main')
+                    except Exception:
+                        pass
+                    release_resources()
+                    self.device.release_during_wait()
+                    return None
+                elif method == 'close_game':
                     logger.info('Close game during wait')
                     self.device.app_stop()
                     release_resources()
@@ -569,6 +578,9 @@ class AzurLaneAutoScript:
                 self.config.task_call('Restart')
             # Get task
             task = self.get_next_task()
+            if task is None:
+                logger.info(f'Alas [{self.config_name}] finished, all pending tasks completed.')
+                break
             # Init device and change server
             _ = self.device
             self.device.config = self.config
