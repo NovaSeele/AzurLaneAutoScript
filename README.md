@@ -2,6 +2,12 @@
 
 # AzurLaneAutoScript
 
+> [!NOTE]
+> **Fork Information & Credit:**
+> - Bản fork này được tinh chỉnh một số tính năng và cải tiến UI phục vụ mục đích cá nhân.
+> - This repository is a customized fork of [AzurLaneAutoScript](https://github.com/LmeSzinc/AzurLaneAutoScript) by **[@LmeSzinc](https://github.com/LmeSzinc)** for personal usage.
+> - All core credits and copyrights belong to **[@LmeSzinc](https://github.com/LmeSzinc)** and the upstream contributors.
+
 #### Discord [![](https://img.shields.io/discord/720789890354249748?logo=discord&logoColor=ffffff&color=4e4c97)](https://discord.gg/AQN6GeJ) QQ群  ![](https://img.shields.io/badge/QQ%20Group-1087735381-4e4c97)
 Azur Lane bot with GUI (Supports CN, EN, JP, TW, able to support other servers), designed for 24/7 running scenes, can take over almost all Azur Lane gameplay. Azur Lane, as a mobile game, has entered the late stage of its life cycle. During the period from now to the server down, please reduce the time spent on the Azur Lane and leave everything to Alas.
 
