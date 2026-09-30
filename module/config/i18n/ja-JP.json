@@ -3031,7 +3031,9 @@
       "Running": "実行中",
       "Pending": "隊列中",
       "Waiting": "Waiting",
-      "NoTask": "No Task"
+      "NoTask": "No Task",
+      "Run": "実行",
+      "ResetAll": "すべてリセット"
     },
     "AddAlas": {
       "PopupTitle": "新しいコンフィグを追加",

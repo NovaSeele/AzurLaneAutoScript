@@ -3,7 +3,7 @@ import json
 import queue
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 from typing import Dict, List, Optional
 
@@ -444,7 +444,20 @@ class AlasGUI(Frame):
             put_scope(
                 "waiting",
                 [
-                    put_text(t("Gui.Overview.Waiting")),
+                    put_row(
+                        [
+                            put_text(t("Gui.Overview.Waiting")).style(
+                                "font-size: 1.25rem; font-weight: 500; margin: 0 0.625rem 0 !important;"
+                            ),
+                            put_button(
+                                label=t("Gui.Overview.ResetAll"),
+                                onclick=self.alas_run_all_waiting,
+                                color="off",
+                                small=True,
+                            ),
+                        ],
+                        size="1fr auto",
+                    ).style("align-items: center; margin-right: 0.625rem;"),
                     put_html('<hr class="hr-group">'),
                     put_scope("waiting_tasks"),
                 ],
@@ -582,6 +595,45 @@ class AlasGUI(Frame):
         except Exception as e:
             logger.exception(e)
 
+    def alas_run_task_now(self, task_name: str) -> None:
+        try:
+            logger.info(f"User requested to run task now: {task_name}")
+            config_name = getattr(self, "alas_name", None) or "alas"
+            now = (datetime.now() - timedelta(seconds=1)).replace(microsecond=0)
+            config = State.config_updater.read_file(config_name)
+            deep_set(config, f"{task_name}.Scheduler.NextRun", now)
+            if hasattr(self, "alas_config") and hasattr(self.alas_config, "modified"):
+                self.alas_config.modified[f"{task_name}.Scheduler.NextRun"] = now
+            State.config_updater.write_file(config_name, config)
+            toast(f"'{task_name}' -> Pending", color="success")
+            self.alas_update_overview_task()
+        except Exception as e:
+            logger.exception(e)
+            toast(f"Failed to reset task: {e}", color="error")
+
+    def alas_run_all_waiting(self) -> None:
+        try:
+            logger.info("User requested to run all waiting tasks now")
+            config_name = getattr(self, "alas_name", None) or "alas"
+            now = (datetime.now() - timedelta(seconds=1)).replace(microsecond=0)
+            config = State.config_updater.read_file(config_name)
+            count = 0
+            if hasattr(self, "alas_config") and hasattr(self.alas_config, "waiting_task"):
+                for func in self.alas_config.waiting_task:
+                    task_name = func.command
+                    deep_set(config, f"{task_name}.Scheduler.NextRun", now)
+                    self.alas_config.modified[f"{task_name}.Scheduler.NextRun"] = now
+                    count += 1
+            if count > 0:
+                State.config_updater.write_file(config_name, config)
+                toast(f"Moved {count} tasks to Pending", color="success")
+                self.alas_update_overview_task()
+            else:
+                toast("No waiting tasks to reset", color="info")
+        except Exception as e:
+            logger.exception(e)
+            toast(f"Failed to reset tasks: {e}", color="error")
+
     def alas_update_overview_task(self) -> None:
         if not self.visible:
             return
@@ -600,7 +652,7 @@ class AlasGUI(Frame):
             pending = []
         waiting = self.alas_config.waiting_task
 
-        def put_task(func: Function):
+        def put_task(func: Function, is_waiting: bool = False):
             with use_scope(f"overview-task_{func.command}"):
                 put_column(
                     [
@@ -609,11 +661,25 @@ class AlasGUI(Frame):
                     ],
                     size="auto auto",
                 )
-                put_button(
-                    label=t("Gui.Button.Setting"),
-                    onclick=lambda: self.alas_set_group(func.command),
-                    color="off",
-                )
+                if is_waiting:
+                    put_buttons(
+                        buttons=[
+                            {"label": t("Gui.Overview.Run"), "value": "run", "color": "info"},
+                            {"label": t("Gui.Button.Setting"), "value": "setting", "color": "off"},
+                        ],
+                        onclick=[
+                            lambda cmd=func.command: self.alas_run_task_now(cmd),
+                            lambda cmd=func.command: self.alas_set_group(cmd),
+                        ],
+                        small=True,
+                        group=True,
+                    )
+                else:
+                    put_button(
+                        label=t("Gui.Button.Setting"),
+                        onclick=lambda cmd=func.command: self.alas_set_group(cmd),
+                        color="off",
+                    )
 
         clear("running_tasks")
         clear("pending_tasks")
@@ -633,7 +699,7 @@ class AlasGUI(Frame):
         with use_scope("waiting_tasks"):
             if waiting:
                 for task in waiting:
-                    put_task(task)
+                    put_task(task, is_waiting=True)
             else:
                 put_text(t("Gui.Overview.NoTask")).style("--overview-notask-text--")
 
@@ -1326,6 +1392,23 @@ def app_manage():
         with open(filepath_config(config_name, mod_name), "rb") as f:
             download(filename, f.read())
 
+    def _delete(config_name: str):
+        if config_name.startswith("template"):
+            toast("Cannot delete template", color="error")
+            return
+        if len(alas_instance()) <= 1:
+            toast("Cannot delete the only remaining config", color="error")
+            return
+        filepath = filepath_config(config_name, get_config_mod(config_name))
+        try:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            toast(f"Deleted {config_name}", color="success")
+        except Exception as e:
+            logger.exception(e)
+            toast(f"Delete failed: {e}", color="error")
+        _show_table()
+
     def _new():
         def get_unused_name():
             all_name = alas_instance()
@@ -1383,17 +1466,16 @@ def app_manage():
                     get_config_mod(name),
                     put_buttons(
                         buttons=[
-                            {"label": t("Gui.AppManage.Export"), "value": name},
-                            # {
-                            #     "label": t("Gui.AppManage.Delete"),
-                            #     "value": name,
-                            #     "disabled": True,
-                            #     "color": "danger",
-                            # },
+                            {"label": t("Gui.AppManage.Export"), "value": "export"},
+                            {
+                                "label": t("Gui.AppManage.Delete"),
+                                "value": "delete",
+                                "color": "danger",
+                            },
                         ],
                         onclick=[
                             partial(_export, name),
-                            # partial(_delete, name),
+                            partial(_delete, name),
                         ],
                         group=True,
                         small=True,

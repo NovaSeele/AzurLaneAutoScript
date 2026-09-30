@@ -3031,7 +3031,9 @@
       "Running": "Running",
       "Pending": "Pending",
       "Waiting": "Waiting",
-      "NoTask": "No Task"
+      "NoTask": "No Task",
+      "Run": "Run",
+      "ResetAll": "Reset All"
     },
     "AddAlas": {
       "PopupTitle": "Add new config",
